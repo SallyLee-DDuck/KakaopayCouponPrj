@@ -6,6 +6,11 @@ SallyLee KakaopayCouponPrePrj(no.2)
 * [개발환경](#개발환경)
 * [테스트(실행)방법](#테스트(실행)방법)
 
+#### 과제구현 및 Readme작성 참고사항
+1. 테스트결과 제출을 위해 response부분은 테스트데이터로 작성
+2. 쿠폰만료일자는 발급 후 30일로 임의지정함
+3. 만료일자 안내 구현 시, 알림톡 기능 감안하여 휴대폰번호로 DTO구성
+
 ## 과제
 Rest API 기반 쿠폰시스템:  
 사용자에게 할인, 선물등 쿠폰을 제공하는 서비스를 개발하려 합니다.  
@@ -50,7 +55,7 @@ input : 쿠폰번호
 * Maven
 * JPA
 * H2
-## 실행방법
+## 테스트(실행)방법
 * clone package 복사 후, swagger-ui로 접속하여 테스트 가능 
 http://localhost:8080/swagger-ui.html
 
@@ -150,93 +155,92 @@ SUCCESS - 200
 Q2LKTDZME6A5VFH5 //해당 휴대폰번호에게 발급된 쿠폰코드
 ```
 
-### 3.사용자에게 지급된 쿠폰을 조회
+### 3.사용자에게 지급된 쿠폰을 조회(issueCouponList)
 * URL
 ```
 GET - /couponApi/couponList
 ```
-* Parameters(couponDTO)
-```
--
-```
+
 * Response
 ```
 SUCCESS - 200 
 
 [
   {
-    "id": 0,                   // PK
-    "code": "string",          // 쿠폰 코드
-    "expireDate": "string",    // 만료 일자
-    "issuance": "Y",           // 지급 여부
-    "use": "Y",                // 사용 여부
-    "mail": "string"           // 쿠폰 지급 받은 사용자 메일
+    "key": 1,
+    "cpNum": "Q2LKTDZME6A5VFH5", //위에서 발급한 쿠폰 
+    "useYn": false,
+    "issueYn": true,
+    "custmHp": "010-0000-0000",
+    "expireDt": "2020-09-10"
   }
 ]
 ```
 
-### 지급된 쿠폰중 하나를 사용/취소(명세조건 4번/5번)
-* Method - URL
+### 4. 사용자가 지급된 쿠폰 중 하나를 사용함(useCoupon)
+* URL
 ```
-PUT - /api/coupons/{code}/use
-```
-* Header
-```
-"token" : JWT
+PUT - /couponApi/couponList/{cpNum}/usetrue
 ```
 * PathVariable
 ```
-{code} : String  // 쿠폰 코드 
-```
-* RequestBody(json)
-```
-{
-  "useStatus": Enum:String(Y/N) // 쿠폰 사용 여부(Y:사용, N취소)
-}
+{cpNum} : String  // 쿠폰번호
 ```
 * Response
 ```
 SUCCESS - 200 
 
 {
-    "id": 0,                   // PK
-    "code": "string",          // 쿠폰 코드
-    "expireDate": "string",    // 만료 일자
-    "issuance": "Y",           // 지급 여부
-    "use": "Y",                // 사용 여부
-    "mail": "string"           // 쿠폰 지급 받은 사용자 메일
+  "key": 1,
+  "cpNum": "Q2LKTDZME6A5VFH5",
+  "useYn": true, //쿠폰사용처리됨
+  "issueYn": true,
+  "custmHp": "010-0000-0000",
+  "expireDt": "2020-09-10"
 }
 ```
 
-### 발급된 쿠폰중 당일 만료된 전체 쿠폰 목록을 조회(명세조건 6번)
-* Method - URL
+### 5. 사용자가 지급된 쿠폰 중 하나를 사용함(useCancelCoupon)
+* URL
 ```
-GET - /api/coupons/expired
+PUT - /couponApi/couponList/{cpNum}/usefalse
 ```
-* Header
+* PathVariable
 ```
-"token" : JWT
-```
-* RequestBody(json)
-```
--
+{cpNum} : String  // 쿠폰번호
 ```
 * Response
 ```
 SUCCESS - 200 
 
 {
-    "id": 0,                   // PK
-    "code": "string",          // 쿠폰 코드
-    "expireDate": "string",    // 만료 일자
-    "issuance": "Y",           // 지급 여부
-    "use": "Y",                // 사용 여부
-    "mail": "string"           // 쿠폰 지급 받은 사용자 메일
+  "key": 1,
+  "cpNum": "Q2LKTDZME6A5VFH5",
+  "useYn": false, // 사용취소됨
+  "issueYn": true,
+  "custmHp": "010-0000-0000",
+  "expireDt": "2020-09-10"
 }
 ```
 
-### 발급된 쿠폰중 만료 3일전 메세지 발송 기능(명세조건 7번)
-* expiredCouponJobSch 구현
+### 6.발급된 쿠폰중 당일 만료된 전체 쿠폰 목록을 조회
+* URL
+```
+GET - /couponApi/couponList/expiredCouponList
+```
+* Response
+```
+SUCCESS - 200 
+[] //현 시점 기준으로 만료예정데이터없음(retrun DTO는 CouponDTO)
+```
+
+### 7.발급된쿠폰 중 3일 전 만료 쿠폰을 오전 10시에 전송(배치작업으로 실행)
+* ExpireCouponNoticeJob 에서 구현완료
+```
+작업시작시간: 10시
+해당 작업은 현재 10시에 당일날짜 기준으로 만료일 3일 후 확인한 다음 Sysout으로 찍게 되어있으나,
+실제로는 알림톡 api연결을 활용하여 구현가능함
+```
 
 #### 계정생성(패스워드 안전한 방법으로 구현)
 * URL
