@@ -49,7 +49,6 @@ input : 쿠폰번호
 * 성능테스트 결과 / 피드백
 
 ## 개발환경
-#### Server
 * Java11
 * Spring Boot 2.3.2 RELEASE
 * Maven
