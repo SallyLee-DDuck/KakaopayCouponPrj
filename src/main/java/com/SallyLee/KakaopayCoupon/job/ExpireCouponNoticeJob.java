@@ -16,7 +16,7 @@ public class ExpireCouponNoticeJob {
 	@Autowired
 	private CouponRepository couponRepository;
 	
-	// 발급된쿠폰 중 3일 전 만료 쿠폰을 오전 10시에 전송
+	// 발급된쿠폰 중 3일 전 만료 쿠폰을 오전 10시에 전송(배치작업으로 실행)
 	@Scheduled(cron= "0 0 10 * * *")
 	public void expiredCouponJobSch() {
 
